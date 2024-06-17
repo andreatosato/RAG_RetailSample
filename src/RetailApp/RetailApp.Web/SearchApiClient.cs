@@ -7,8 +7,8 @@ public class SearchApiClient(HttpClient httpClient)
         await httpClient.PostAsJsonAsync<string>("/import/load", "");
     }
 
-    public async Task<List<Clothes>> GetClothes(CancellationToken cancellationToken = default)
+    public async Task<List<Clothes>> GetClothes(string question, CancellationToken cancellationToken = default)
     {
-        return await httpClient.GetFromJsonAsync<List<Clothes>>("/search", cancellationToken);
+        return await httpClient.GetFromJsonAsync<List<Clothes>>($"/search?question={question}", cancellationToken);
     }
 }

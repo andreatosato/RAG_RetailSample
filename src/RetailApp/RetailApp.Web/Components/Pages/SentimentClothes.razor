@@ -1,4 +1,4 @@
-﻿@page "/outfit"
+﻿@page "/sentiment-clothes"
 @inject SearchApiClient client
 
 <h3>Search Outfit</h3>
@@ -18,7 +18,7 @@
 @code {
     public class SearchModel
     {
-        public string SearchText {get; set;}
+        public string SearchText { get; set; }
     }
 
     [SupplyParameterFromForm]
