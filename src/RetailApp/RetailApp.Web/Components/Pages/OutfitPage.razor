@@ -1,0 +1,31 @@
+﻿@page "/outfit-page"
+@inject SearchApiClient client
+
+<h3>Search Outfit</h3>
+
+<EditForm Model="Model" OnValidSubmit="Submit" FormName="search">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label for="searchOutfit">Film Title</label>
+        <InputText @bind-Value="Model!.SearchText" class="form-control" id="searchOutfit" aria-describedby="searchOutfitHelp" placeholder="" />
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+</EditForm>
+
+@code {
+    public class SearchModel
+    {
+        public SearchText {get; set;}
+    }
+
+    [SupplyParameterFromForm]
+    public SearchModel Model { get; set; }
+
+    async Task Submit()
+    {
+        await client.GetClothes(Model.FilmTitle);
+    }
+}

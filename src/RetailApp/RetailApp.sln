@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.34902.84
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetailApp.AppHost", "RetailApp.AppHost\RetailApp.AppHost.csproj", "{21D0F231-7E86-4EA3-AD39-5D62EA9C4D45}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RetailApp.AppHost", "RetailApp.AppHost\RetailApp.AppHost.csproj", "{21D0F231-7E86-4EA3-AD39-5D62EA9C4D45}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RetailApp.ServiceDefaults", "RetailApp.ServiceDefaults\RetailApp.ServiceDefaults.csproj", "{F57F9526-4B55-4B1C-8CCE-E9EDD3BE90AB}"
 EndProject
