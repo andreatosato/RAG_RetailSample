@@ -1,4 +1,8 @@
-﻿namespace RetailApp.Web;
+﻿using Microsoft.KernelMemory;
+using System.Net.Http.Json;
+using System.Web;
+
+namespace RetailApp.Web;
 
 public class SearchApiClient(HttpClient httpClient)
 {
@@ -7,8 +11,14 @@ public class SearchApiClient(HttpClient httpClient)
         await httpClient.PostAsJsonAsync<string>("/import/load", "");
     }
 
-    public async Task<List<Clothes>> GetClothes(string question, CancellationToken cancellationToken = default)
+    public async Task<Clothes> GetClothes(string question, CancellationToken cancellationToken = default)
     {
-        return await httpClient.GetFromJsonAsync<List<Clothes>>($"/search?question={question}", cancellationToken);
+        var content = await httpClient.PostAsJsonAsync("/search", new QuestionRequest { QuestionUser = question }, cancellationToken);
+        return await content.Content.ReadFromJsonAsync<Clothes>();
     }
+}
+
+public class QuestionRequest
+{
+    public string QuestionUser { get; set; } = null!;
 }

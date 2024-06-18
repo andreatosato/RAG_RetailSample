@@ -1,7 +1,7 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var apiKey = builder.AddParameter("apikey", secret: true);
-var qdrant = builder.AddQdrant("retail-app-days", apiKey);
+var qdrant = builder.AddQdrant("retail-app-days", apiKey).WithBindMount("/qdrant/storage", "/qdrant/storage");
 
 var apiService = builder.AddProject<Projects.RetailApp_ApiService>("apiservice")
     .WithReference(qdrant);

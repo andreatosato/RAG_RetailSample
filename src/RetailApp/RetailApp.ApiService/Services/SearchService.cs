@@ -23,15 +23,8 @@ public class SearchService
         {
             chat.AddUserMessage(question);
             chat.AddAssistantMessage(answer.Result);
-            foreach (Citation source in answer.RelevantSources)
+            foreach (var source in answer.RelevantSources)
             {
-                try
-                {
-                    //var d = memoryDb.GetListAsync(source.Index);
-                }
-                catch (Exception)
-                {
-                }
                 Console.WriteLine($"- {source.SourceUrl ?? source.SourceName}");
             }
             return answer;
@@ -49,7 +42,9 @@ public class SearchService
         You must reformulate the question in the same language of the user's question.
         Never add "in this chat", "in the context of this chat", "in the context of our conversation", "search for" or something like that in your answer.
         """;
-        var reformulatedQuestion = await chatCompletionService.GetChatMessageContentAsync(chat);        
+        chat.AddUserMessage(embeddingQuestion);
+        var reformulatedQuestion = await chatCompletionService.GetChatMessageContentAsync(chat);
+        chat.AddAssistantMessage(reformulatedQuestion.Content);
         return reformulatedQuestion.Content;
     }
 }

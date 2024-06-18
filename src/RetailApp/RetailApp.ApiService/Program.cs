@@ -1,9 +1,6 @@
-using Aspire.Qdrant.Client;
-using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using RetailApp.ApiService;
 using RetailApp.ApiService.Options;
 using RetailApp.ApiService.Services;
 
@@ -11,24 +8,76 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 builder.Services.AddProblemDetails();
+var qdrantConnectionstring = builder.Configuration.GetConnectionString("retail-app-days");
+var qdrantArray = qdrantConnectionstring.Split(";").Select(t => t.Replace("Endpoint=", "").Replace("Key=", "")).ToArray();
+var uri = new UriBuilder(qdrantArray[0]);
+uri.Port++;
+var qdrantEndpoint = uri.ToString();
+var qdrantApiKey = qdrantArray[1];
+var aiOption = builder.Configuration.GetSection("OpenAI").Get<AIOption>()!;
+
 builder.AddQdrantClient("retail-app-days");
-builder.Services.Configure<AIOption>(builder.Configuration.GetSection("OpenAI"));
-builder.Services.AddScoped<Kernel>(sp => 
-    SetupKernelMemory.Build(
-        sp.GetService<IOptions<AIOption>>(),
-        sp.GetService<QdrantClientSettings>()));
-builder.Services.AddScoped<IChatCompletionService>(sp => sp.GetService<Kernel>().Services.GetRequiredService<IChatCompletionService>());
-builder.Services.AddScoped<IKernelMemory>(sp => sp.GetService<Kernel>().Services.GetRequiredService<IKernelMemory>());
+builder.Services.AddKernelMemory(c => c
+            .WithAzureOpenAITextEmbeddingGeneration(new()
+            {
+                APIKey = aiOption.ApiKey,
+                Auth = AzureOpenAIConfig.AuthTypes.APIKey,
+                Deployment = aiOption.Embedding.Deployment,
+                Endpoint = aiOption.Endpoint,
+                APIType = AzureOpenAIConfig.APITypes.EmbeddingGeneration,
+                MaxTokenTotal = int.Parse(aiOption.Embedding.MaxTokens)
+            })
+            .WithAzureOpenAITextGeneration(new()
+            {
+                APIKey = aiOption.ApiKey,
+                Auth = AzureOpenAIConfig.AuthTypes.APIKey,
+                Deployment = aiOption.Chat.Deployment,
+                Endpoint = aiOption.Endpoint,
+                APIType = AzureOpenAIConfig.APITypes.ChatCompletion,
+                MaxTokenTotal = int.Parse(aiOption.Chat.MaxTokens)
+            })
+            .WithSearchClientConfig(new()
+            {
+                EmptyAnswer = "Mi dispiace, Non ho trovato nessuna informazione che possa essere utilizzata per risponderti. Prova a riformulare la richiesta.",
+                MaxMatchesCount = 25,
+                AnswerTokens = 800
+            })
+            .WithCustomTextPartitioningOptions(new()
+            {
+                // Defines the properties that are used to split the documents in chunks.
+                MaxTokensPerParagraph = 1500,
+                MaxTokensPerLine = 300,
+                OverlappingTokens = 100
+            })
+            .WithQdrantMemoryDb(qdrantEndpoint, qdrantApiKey)
+            .Build<MemoryServerless>());
+builder.Services.AddAzureOpenAIChatCompletion(aiOption.Chat.Deployment, aiOption.Endpoint, aiOption.ApiKey);
 builder.Services.AddScoped<SearchService>();
 builder.Services.AddScoped<ImportService>();
 var app = builder.Build();
 
 app.UseExceptionHandler();
-app.MapGet("/search", async (string question, SearchService searchService) =>
+app.MapPost("/search", async ([FromBody]QuestionRequest question, SearchService searchService) =>
 {
-    var answer = await searchService.Search(question);
-
-    return Results.Ok(new Clothes { Result = answer.Result });
+    MemoryAnswer answer = await searchService.Search(question.QuestionUser);
+    if(!answer?.NoResult ?? false)
+        return Results.Ok(new Clothes
+        {
+            Citations = answer?.RelevantSources.Select(x => new Citation
+            {
+                DocumentId = x.DocumentId,
+                FileId = x.FileId,
+                Index = x.Index,
+                Link = x.Link,
+                SourceContentType = x.SourceContentType,
+                SourceName = x.SourceName,
+                SourceUrl = x.SourceUrl
+            })
+            .ToList()
+        });
+    
+    
+    return Results.NotFound();
 });
 
 app.MapPost("/import/load", async (ImportService service) =>
@@ -38,3 +87,8 @@ app.MapPost("/import/load", async (ImportService service) =>
 
 app.MapDefaultEndpoints();
 app.Run();
+
+public class QuestionRequest
+{
+    public string QuestionUser { get; set; } = null!;
+}

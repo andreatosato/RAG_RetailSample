@@ -1,4 +1,5 @@
 ﻿using Microsoft.KernelMemory;
+using System.Diagnostics;
 
 namespace RetailApp.ApiService.Services;
 
@@ -24,14 +25,21 @@ public class ImportService
             do
             {
                 currentCollection = await client.GetFromJsonAsync<NewCollection>(string.Format(uri, page, c));
-                Parallel.ForEach(currentCollection.PlpList.ProductList, async (m) =>
+                foreach (var m in currentCollection.PlpList.ProductList)
                 {
-                    await kernelMemory.ImportWebPageAsync(string.Format("https://www2.hm.com{0}", m.Url));
-                });
-                //foreach (var m in currentCollection.PlpList.ProductList)
-                //{
-                //    await kernelMemory.ImportWebPageAsync(string.Format("https://www2.hm.com{0}", m.Url));
-                //}
+                    Debug.WriteLine($"{m.ProductName} - {m.Id}");
+                    Debug.WriteLine($"{m.Url}");
+
+                    var pageUri = string.Format("https://www2.hm.com{0}", m.Url);
+                    try
+                    {
+                        var documentId = await kernelMemory.ImportWebPageAsync(pageUri);
+                        Debug.WriteLine($"Imported {page} for {documentId}");
+                    }
+                    catch (Exception ex)
+                    {
+                    }                    
+                }
                 if (currentCollection!.Pagination.NextPageNum.HasValue)
                     page = currentCollection!.Pagination.NextPageNum.Value;
             }

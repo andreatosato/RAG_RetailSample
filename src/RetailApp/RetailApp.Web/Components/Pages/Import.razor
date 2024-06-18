@@ -1,0 +1,23 @@
+﻿@page "/import"
+@inject SearchApiClient client
+
+<EditForm Model="Model" OnValidSubmit="ImportData" FormName="import">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Import</button>
+    </div>
+</EditForm>
+
+
+@code {
+    public ModelImport Model { get; set; } = new ModelImport();
+    public class ModelImport
+    {
+        
+    }
+    async Task ImportData()
+    {
+        await client.Import();
+    }
+}

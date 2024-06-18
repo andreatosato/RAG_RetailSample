@@ -1,4 +1,5 @@
 ﻿@page "/sentiment-clothes"
+@using Microsoft.KernelMemory
 @inject SearchApiClient client
 
 <h3>Search Outfit</h3>
@@ -15,10 +16,19 @@
     </div>
 </EditForm>
 
+@if (Model?.Clothes?.Citations?.Any() ?? false)
+{
+    @foreach(var c in Model.Clothes.Citations)
+    {
+        <a href="@c.SourceUrl">@c.SourceUrl</a><br />
+    }
+}
+
 @code {
     public class SearchModel
     {
         public string SearchText { get; set; }
+        public Clothes Clothes { get; set; } = new();
     }
 
     [SupplyParameterFromForm]
@@ -26,6 +36,7 @@
 
     async Task Submit()
     {
-        await client.GetClothes(Model.SearchText);
+        Model.Clothes = await client.GetClothes(Model.SearchText);
+        StateHasChanged();
     }
 }

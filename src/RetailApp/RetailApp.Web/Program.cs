@@ -8,7 +8,9 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddHttpClient<SearchApiClient>(client =>
 {
-    client.BaseAddress = new("https+http://apiservice");
+    //client.BaseAddress = new("https+http://apiservice");
+    client.BaseAddress = new("http://apiservice");
+    client.Timeout = TimeSpan.FromMinutes(15);
 });
 var app = builder.Build();
 
