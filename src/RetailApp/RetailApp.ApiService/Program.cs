@@ -65,6 +65,7 @@ app.MapPost("/search", async ([FromBody]QuestionRequest question, SearchService 
     if(!answer?.NoResult ?? false)
         return Results.Ok(new Clothes
         {
+            Result = answer?.Result,
             Citations = answer?.RelevantSources.Select(x => new Citation
             {
                 DocumentId = x.DocumentId,

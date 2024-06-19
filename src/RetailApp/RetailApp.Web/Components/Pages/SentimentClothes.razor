@@ -18,6 +18,8 @@
 
 @if (Model?.Clothes?.Citations?.Any() ?? false)
 {
+    <span>@Model?.Clothes?.Result</span>
+    <br />
     @foreach(var c in Model.Clothes.Citations)
     {
         <a href="@c.SourceUrl">@c.SourceUrl</a><br />
