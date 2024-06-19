@@ -40,6 +40,7 @@ public class ImportService
                     {
                     }                    
                 }
+                await Task.Delay(5000);
                 if (currentCollection!.Pagination.NextPageNum.HasValue)
                     page = currentCollection!.Pagination.NextPageNum.Value;
             }

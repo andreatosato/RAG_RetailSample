@@ -11,7 +11,9 @@ builder.Services.AddProblemDetails();
 var qdrantConnectionstring = builder.Configuration.GetConnectionString("retail-app-days");
 var qdrantArray = qdrantConnectionstring.Split(";").Select(t => t.Replace("Endpoint=", "").Replace("Key=", "")).ToArray();
 var uri = new UriBuilder(qdrantArray[0]);
-uri.Port++;
+if(builder.Environment.IsDevelopment())
+    uri.Port++;
+
 var qdrantEndpoint = uri.ToString();
 var qdrantApiKey = qdrantArray[1];
 var aiOption = builder.Configuration.GetSection("OpenAI").Get<AIOption>()!;
