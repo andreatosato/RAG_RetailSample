@@ -18,7 +18,7 @@ public class SearchService
     {
         var chat = new ChatHistory();
         question = await CreateQuestionAsync(question, chat);
-        var answer = await kernelMemory.AskAsync(question, minRelevance: 0.75);
+        var answer = await kernelMemory.AskAsync(question);
         if (answer.NoResult == false)
         {
             chat.AddUserMessage(question);
@@ -35,7 +35,7 @@ public class SearchService
     async Task<string> CreateQuestionAsync(string question, ChatHistory chat)
     {
         var embeddingQuestion = $"""
-        Reformulate the following question taking into account the context of the chat to perform embeddings search:
+        Reformulate the following question to perform embeddings search:
         ---
         {question}
         ---
