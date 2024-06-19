@@ -6,10 +6,12 @@ namespace RetailApp.ApiService.Services;
 public class ImportService
 {
     private readonly IKernelMemory kernelMemory;
+    private readonly ILogger<ImportService> logger;
 
-    public ImportService(IKernelMemory kernelMemory)
+    public ImportService(IKernelMemory kernelMemory, ILogger<ImportService> logger)
     {
         this.kernelMemory = kernelMemory;
+        this.logger = logger;
     }
     public async Task Import()
     {
@@ -20,6 +22,7 @@ public class ImportService
         using var client = new HttpClient();
         NewCollection currentCollection;
         var products = new List<string>();
+        var producstUri = new List<Uri>();
         foreach (var c in categories)
         {
             do
@@ -29,23 +32,28 @@ public class ImportService
                 {
                     Debug.WriteLine($"{m.ProductName} - {m.Id}");
                     Debug.WriteLine($"{m.Url}");
-
+                    logger.LogInformation($"{m.ProductName} - {m.Id}");
                     var pageUri = string.Format("https://www2.hm.com{0}", m.Url);
-                    try
-                    {
-                        var documentId = await kernelMemory.ImportWebPageAsync(pageUri);
-                        Debug.WriteLine($"Imported {page} for {documentId}");
-                    }
-                    catch (Exception ex)
-                    {
-                    }                    
+                    producstUri.Add(new Uri(pageUri));
                 }
-                await Task.Delay(5000);
                 if (currentCollection!.Pagination.NextPageNum.HasValue)
                     page = currentCollection!.Pagination.NextPageNum.Value;
             }
             while (currentCollection!.Pagination.NextPageNum != null);
             page = 1;
+        }
+
+        foreach (var c in producstUri)
+        {
+            try
+            {
+                var documentId = await kernelMemory.ImportWebPageAsync(c.ToString());
+                Debug.WriteLine($"Imported {c.ToString()} for {documentId}");
+            }
+            catch (Exception ex)
+            {
+                await Task.Delay(5000);
+            }
         }
     }
 }
